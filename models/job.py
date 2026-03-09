@@ -40,6 +40,7 @@ class JobSchema(BaseModel):
     published: datetime | None = None
     source: str = Field(default=SOURCE_NAME)
     skills: list[str] = Field(default_factory=list)
+    score: float = 0.0
 
 
 def parse_jobs(raw_jobs: list[dict[str, Any]]) -> list[JobSchema]:

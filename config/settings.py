@@ -21,3 +21,5 @@ DEFAULT_LIMIT: Final[int] = 20
 MAX_PAGES: Final[int] = 3
 REQUEST_TIMEOUT_SECONDS: Final[int] = 10
 SOURCE_NAME: Final[str] = "arbetsformedlingen"
+CV_PATH: Final[str] = "cv.txt"
+EMBEDDING_MODEL_NAME: Final[str] = "all-MiniLM-L6-v2"

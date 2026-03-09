@@ -1,8 +1,10 @@
 from config.settings import (
     API_BASE_URL,
+    CV_PATH,
     DATABASE_URL,
     DEFAULT_LIMIT,
     DEFAULT_QUERY,
+    EMBEDDING_MODEL_NAME,
     MAX_PAGES,
     REQUEST_TIMEOUT_SECONDS,
     SEARCH_LOCATIONS,
@@ -12,9 +14,11 @@ from config.settings import (
 
 __all__ = [
     "API_BASE_URL",
+    "CV_PATH",
     "DATABASE_URL",
     "DEFAULT_LIMIT",
     "DEFAULT_QUERY",
+    "EMBEDDING_MODEL_NAME",
     "MAX_PAGES",
     "REQUEST_TIMEOUT_SECONDS",
     "SEARCH_LOCATIONS",

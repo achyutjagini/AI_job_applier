@@ -74,3 +74,15 @@ def _job_identifier(job: JobSchema, fallback_index: int) -> str:
     if job.id is not None:
         return str(job.id)
     return hashlib.sha1(f"{job.url}-{fallback_index}".encode("utf-8")).hexdigest()[:12]
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
+    results = run_application_generation()
+
+    print(f"\nGenerated {len(results)} applications\n")
+
+    for app in results:
+        job = app["job"]
+        print(f"{job.title} @ {job.company}")
+        print(" ->", app["directory"])

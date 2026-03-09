@@ -1,31 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Iterable
 
-from sqlalchemy import DateTime, Integer, String, Text, create_engine, select
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
+from sqlalchemy import create_engine, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session, sessionmaker
 
 from config.settings import DATABASE_URL
-from models.job import JobSchema
-
-
-class Base(DeclarativeBase):
-    pass
-
-
-class Job(Base):
-    __tablename__ = "jobs"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    title: Mapped[str] = mapped_column(String(256), nullable=False)
-    company: Mapped[str | None] = mapped_column(String(256), nullable=True)
-    location: Mapped[str | None] = mapped_column(String(256), nullable=True)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    url: Mapped[str] = mapped_column(String(512), unique=True, nullable=False)
-    published: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    source: Mapped[str] = mapped_column(String(128), nullable=False)
-    scraped_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+from models.job import Base, Job, JobSchema
 
 
 engine = create_engine(DATABASE_URL, echo=False, future=True)
@@ -53,19 +35,14 @@ def save_jobs(jobs: Iterable[JobSchema], session: Session | None = None) -> int:
     db_session = session or get_session()
 
     try:
-        urls = [str(job.url) for job in parsed_jobs]
-        existing_urls = set(
-            db_session.scalars(select(Job.url).where(Job.url.in_(urls))).all()
-        )
-        seen_urls = set(existing_urls)
-
-        new_records: list[Job] = []
+        inserted_count = 0
         for job in parsed_jobs:
             job_url = str(job.url)
-            if job_url in seen_urls:
+            existing = db_session.scalar(select(Job.id).where(Job.url == job_url))
+            if existing is not None:
                 continue
 
-            new_records.append(
+            db_session.add(
                 Job(
                     title=job.title,
                     company=job.company,
@@ -76,11 +53,38 @@ def save_jobs(jobs: Iterable[JobSchema], session: Session | None = None) -> int:
                     source=job.source,
                 )
             )
-            seen_urls.add(job_url)
+            inserted_count += 1
 
-        db_session.add_all(new_records)
-        db_session.commit()
-        return len(new_records)
+        try:
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
+            inserted_count = 0
+            for job in parsed_jobs:
+                job_url = str(job.url)
+                existing = db_session.scalar(select(Job.id).where(Job.url == job_url))
+                if existing is not None:
+                    continue
+
+                try:
+                    db_session.add(
+                        Job(
+                            title=job.title,
+                            company=job.company,
+                            location=job.location,
+                            description=job.description,
+                            url=job_url,
+                            published=job.published,
+                            source=job.source,
+                        )
+                    )
+                    db_session.commit()
+                    inserted_count += 1
+                except IntegrityError:
+                    db_session.rollback()
+            return inserted_count
+
+        return inserted_count
     except Exception:
         db_session.rollback()
         raise

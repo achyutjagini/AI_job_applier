@@ -29,7 +29,9 @@ def main() -> None:
     finally:
         session.close()
 
-    logger.info("Parsed %d jobs and saved %d new records", len(parsed_jobs), saved_count)
+    duplicates_skipped = len(parsed_jobs) - saved_count
+    logger.info("Parsed %d jobs", len(parsed_jobs))
+    logger.info("Saved %d new jobs (%d duplicates skipped)", saved_count, duplicates_skipped)
 
     for index, job in enumerate(parsed_jobs[:10], start=1):
         company = job.company or "Unknown company"

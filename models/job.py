@@ -5,10 +5,30 @@ from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, Field, HttpUrl, ValidationError
+from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from config.settings import SOURCE_NAME
 
 logger = logging.getLogger(__name__)
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Job(Base):
+    __tablename__ = "jobs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(256), nullable=False)
+    company: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    location: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    url: Mapped[str] = mapped_column(String(512), unique=True, nullable=False)
+    published: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    source: Mapped[str] = mapped_column(String(128), nullable=False)
+    scraped_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
 
 class JobSchema(BaseModel):

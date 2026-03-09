@@ -5,7 +5,13 @@ from typing import Any
 
 import requests
 
-from config.settings import API_BASE_URL, DEFAULT_LIMIT, DEFAULT_QUERY, REQUEST_TIMEOUT_SECONDS
+from config.settings import (
+    API_BASE_URL,
+    DEFAULT_LIMIT,
+    DEFAULT_QUERY,
+    MAX_PAGES,
+    REQUEST_TIMEOUT_SECONDS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,19 +33,27 @@ class ArbetsformedlingenScraper:
         self,
         query: str = DEFAULT_QUERY,
         limit: int = DEFAULT_LIMIT,
+        max_pages: int = MAX_PAGES,
     ) -> list[dict[str, Any]]:
-        params = {"q": query, "limit": limit}
-        logger.info("Requesting Arbetsformedlingen jobs with params=%s", params)
-        response = self.session.get(self.base_url, params=params, timeout=self.timeout)
-        response.raise_for_status()
+        jobs: list[dict[str, Any]] = []
+        for page in range(max_pages):
+            offset = page * limit
+            params = {"q": query, "limit": limit, "offset": offset}
+            response = self.session.get(self.base_url, params=params, timeout=self.timeout)
+            response.raise_for_status()
 
-        payload = response.json()
-        hits = payload.get("hits", [])
-        if not isinstance(hits, list):
-            raise ValueError("Expected Arbetsformedlingen API response to contain a list of hits.")
+            payload = response.json()
+            hits = payload.get("hits", [])
+            if not isinstance(hits, list):
+                raise ValueError("Expected Arbetsformedlingen API response to contain a list of hits.")
 
-        logger.info("Received %d raw Arbetsformedlingen jobs", len(hits))
-        return hits
+            logger.info("Page %d returned %d jobs", page + 1, len(hits))
+            jobs.extend(hits)
+
+            if len(hits) < limit:
+                break
+
+        return jobs
 
     def close(self) -> None:
         self.session.close()

@@ -3,8 +3,11 @@ from config.settings import (
     DATABASE_URL,
     DEFAULT_LIMIT,
     DEFAULT_QUERY,
+    MAX_PAGES,
     REQUEST_TIMEOUT_SECONDS,
+    SEARCH_LOCATIONS,
     SOURCE_NAME,
+    TECH_JOB_QUERIES,
 )
 
 __all__ = [
@@ -12,6 +15,9 @@ __all__ = [
     "DATABASE_URL",
     "DEFAULT_LIMIT",
     "DEFAULT_QUERY",
+    "MAX_PAGES",
     "REQUEST_TIMEOUT_SECONDS",
+    "SEARCH_LOCATIONS",
     "SOURCE_NAME",
+    "TECH_JOB_QUERIES",
 ]

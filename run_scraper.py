@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from config.settings import DEFAULT_LIMIT, DEFAULT_QUERY
+from config.settings import DEFAULT_LIMIT, MAX_PAGES, SEARCH_LOCATIONS, TECH_JOB_QUERIES
 from database.db import get_session, init_db, save_jobs
 from models.job import parse_jobs
 from scrapers.arbetsformedlingen import ArbetsformedlingenScraper
@@ -15,13 +15,21 @@ logger = logging.getLogger(__name__)
 def main() -> None:
     init_db()
 
+    all_raw_jobs: list[dict[str, object]] = []
     scraper = ArbetsformedlingenScraper()
     try:
-        raw_jobs = scraper.search_jobs(DEFAULT_QUERY, DEFAULT_LIMIT)
+        for query in TECH_JOB_QUERIES:
+            for location in SEARCH_LOCATIONS:
+                search_text = f"{query} {location}"
+                logger.info("Searching query: %s in %s", query, location)
+                raw_jobs = scraper.search_jobs(search_text, DEFAULT_LIMIT, MAX_PAGES)
+                logger.info("Received %d jobs", len(raw_jobs))
+                all_raw_jobs.extend(raw_jobs)
     finally:
         scraper.close()
 
-    parsed_jobs = parse_jobs(raw_jobs)
+    logger.info("Total jobs collected: %d", len(all_raw_jobs))
+    parsed_jobs = parse_jobs(all_raw_jobs)
 
     session = get_session()
     try:

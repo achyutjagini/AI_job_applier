@@ -1,238 +1,89 @@
-"""Database operations for job postings."""
+from __future__ import annotations
 
-import logging
-from typing import Optional, List, Dict, Any
-from sqlalchemy import create_engine, inspect, func
-from sqlalchemy.orm import sessionmaker, Session
-from pathlib import Path
+from datetime import datetime
+from typing import Iterable
 
-from database.models import Base, Job, JobSchema
-from utils.config import DATABASE_URL, DATABASE_PATH
+from sqlalchemy import DateTime, Integer, String, Text, create_engine, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
-logger = logging.getLogger(__name__)
+from config.settings import DATABASE_URL
+from models.job import JobSchema
 
-# Create database engine
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    echo=False,
-)
 
-# Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+class Base(DeclarativeBase):
+    pass
+
+
+class Job(Base):
+    __tablename__ = "jobs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(256), nullable=False)
+    company: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    location: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    url: Mapped[str] = mapped_column(String(512), unique=True, nullable=False)
+    published: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    source: Mapped[str] = mapped_column(String(128), nullable=False)
+    scraped_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+engine = create_engine(DATABASE_URL, echo=False, future=True)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 
 def init_db() -> None:
-    """Initialize the database and create tables."""
+    """Create database tables if they do not exist."""
+
+    Base.metadata.create_all(bind=engine)
+
+
+def get_session() -> Session:
+    return SessionLocal()
+
+
+def save_jobs(jobs: Iterable[JobSchema], session: Session | None = None) -> int:
+    """Persist validated jobs while skipping duplicates by URL."""
+
+    parsed_jobs = list(jobs)
+    if not parsed_jobs:
+        return 0
+
+    owns_session = session is None
+    db_session = session or get_session()
+
     try:
-        Base.metadata.create_all(bind=engine)
-        logger.info(f"Database initialized at {DATABASE_PATH}")
-    except Exception as e:
-        logger.error(f"Failed to initialize database: {e}")
+        urls = [str(job.url) for job in parsed_jobs]
+        existing_urls = set(
+            db_session.scalars(select(Job.url).where(Job.url.in_(urls))).all()
+        )
+        seen_urls = set(existing_urls)
+
+        new_records: list[Job] = []
+        for job in parsed_jobs:
+            job_url = str(job.url)
+            if job_url in seen_urls:
+                continue
+
+            new_records.append(
+                Job(
+                    title=job.title,
+                    company=job.company,
+                    location=job.location,
+                    description=job.description,
+                    url=job_url,
+                    published=job.published,
+                    source=job.source,
+                )
+            )
+            seen_urls.add(job_url)
+
+        db_session.add_all(new_records)
+        db_session.commit()
+        return len(new_records)
+    except Exception:
+        db_session.rollback()
         raise
-
-
-def get_db() -> Session:
-    """Get database session."""
-    db = SessionLocal()
-    try:
-        yield db
     finally:
-        db.close()
-
-
-def job_exists(url: str, db: Optional[Session] = None) -> bool:
-    """Check if a job already exists in the database by URL.
-    
-    Args:
-        url: Job URL
-        db: Database session (optional)
-        
-    Returns:
-        bool: True if job exists, False otherwise
-    """
-    close_session = False
-    if db is None:
-        db = SessionLocal()
-        close_session = True
-
-    try:
-        result = db.query(Job).filter(Job.url == url).first()
-        return result is not None
-    except Exception as e:
-        logger.error(f"Error checking if job exists: {e}")
-        return False
-    finally:
-        if close_session:
-            db.close()
-
-
-def insert_job(job_data: JobSchema, db: Optional[Session] = None) -> Optional[Job]:
-    """Insert a new job into the database.
-    
-    Args:
-        job_data: JobSchema instance with job data
-        db: Database session (optional)
-        
-    Returns:
-        Job: Created Job object or None if failed
-    """
-    close_session = False
-    if db is None:
-        db = SessionLocal()
-        close_session = True
-
-    try:
-        # Check if job already exists
-        if job_exists(job_data.url, db):
-            logger.debug(f"Job already exists: {job_data.url}")
-            return None
-
-        # Create and insert job
-        db_job = Job(**job_data.dict())
-        db.add(db_job)
-        db.commit()
-        db.refresh(db_job)
-        logger.info(f"Inserted job: {db_job.title} at {db_job.company}")
-        return db_job
-    except Exception as e:
-        logger.error(f"Error inserting job: {e}")
-        db.rollback()
-        return None
-    finally:
-        if close_session:
-            db.close()
-
-
-def get_all_jobs(db: Optional[Session] = None) -> List[Job]:
-    """Retrieve all jobs from the database.
-    
-    Args:
-        db: Database session (optional)
-        
-    Returns:
-        List[Job]: List of all jobs
-    """
-    close_session = False
-    if db is None:
-        db = SessionLocal()
-        close_session = True
-
-    try:
-        jobs = db.query(Job).all()
-        return jobs
-    except Exception as e:
-        logger.error(f"Error retrieving jobs: {e}")
-        return []
-    finally:
-        if close_session:
-            db.close()
-
-
-def get_job_count(db: Optional[Session] = None) -> int:
-    """Get total number of jobs in database.
-    
-    Args:
-        db: Database session (optional)
-        
-    Returns:
-        int: Total number of jobs
-    """
-    close_session = False
-    if db is None:
-        db = SessionLocal()
-        close_session = True
-
-    try:
-        count = db.query(func.count(Job.id)).scalar()
-        return count
-    except Exception as e:
-        logger.error(f"Error getting job count: {e}")
-        return 0
-    finally:
-        if close_session:
-            db.close()
-
-
-def get_job_count(db: Optional[Session] = None) -> int:
-    """Get total number of jobs in database.
-    
-    Args:
-        db: Database session (optional)
-        
-    Returns:
-        int: Total number of jobs
-    """
-    close_session = False
-    if db is None:
-        db = SessionLocal()
-        close_session = True
-
-    try:
-        count = db.query(Job).count()
-        return count
-    except Exception as e:
-        logger.error(f"Error getting job count: {e}")
-        return 0
-    finally:
-        if close_session:
-            db.close()
-
-
-def get_db_stats(db: Optional[Session] = None) -> Dict[str, Any]:
-    """Get database statistics.
-    
-    Args:
-        db: Database session (optional)
-        
-    Returns:
-        Dict: Statistics about jobs in database
-    """
-    close_session = False
-    if db is None:
-        db = SessionLocal()
-        close_session = True
-
-    try:
-        total_jobs = db.query(func.count(Job.id)).scalar()
-        
-        # Count by source
-        source_counts = db.query(Job.source, func.count(Job.id)).group_by(Job.source).all()
-        by_source = {source: count for source, count in source_counts}
-        
-        return {
-            "total_jobs": total_jobs,
-            "by_source": by_source
-        }
-    except Exception as e:
-        logger.error(f"Error getting database stats: {e}")
-        return {"total_jobs": 0, "by_source": {}}
-    finally:
-        if close_session:
-            db.close()
-
-
-def get_jobs_by_source(source: str, db: Optional[Session] = None) -> List[Job]:
-    """Retrieve jobs by source.
-    
-    Args:
-        source: Job source name
-        db: Database session (optional)
-        
-    Returns:
-        List[Job]: List of jobs from the specified source
-    """
-    close_session = False
-    if db is None:
-        db = SessionLocal()
-        close_session = True
-
-    try:
-        jobs = db.query(Job).filter(Job.source == source).all()
-        return jobs
-    except Exception as e:
-        logger.error(f"Error retrieving jobs by source: {e}")
-        return []
-    finally:
-        if close_session:
-            db.close()
+        if owns_session:
+            db_session.close()

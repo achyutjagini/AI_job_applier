@@ -1,43 +1,39 @@
+from __future__ import annotations
+
 import logging
 
-from scraper.linkedin_scraper import LinkedInScraper
-from scraper.greenhouse_scraper import GreenhouseScraper
+from config.settings import DEFAULT_LIMIT, DEFAULT_QUERY
+from database.db import get_session, init_db, save_jobs
+from models.job import parse_jobs
+from scrapers.arbetsformedlingen import ArbetsformedlingenScraper
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger(__name__)
 
 
-def main():
-    print("Starting job scraping...\n")
+def main() -> None:
+    init_db()
 
-    jobs = []
-
+    scraper = ArbetsformedlingenScraper()
     try:
-        print("Running LinkedIn scraper...")
-        linkedin = LinkedInScraper()
-        linkedin_jobs = linkedin.search_jobs("AI Engineer", "Stockholm")
-        print(f"LinkedIn jobs found: {len(linkedin_jobs)}")
+        raw_jobs = scraper.search_jobs(DEFAULT_QUERY, DEFAULT_LIMIT)
+    finally:
+        scraper.close()
 
-        jobs.extend(linkedin_jobs)
+    parsed_jobs = parse_jobs(raw_jobs)
 
-    except Exception as e:
-        print("LinkedIn scraper error:", e)
-
+    session = get_session()
     try:
-        print("\nRunning Greenhouse scraper...")
-        greenhouse = GreenhouseScraper()
-        greenhouse_jobs = greenhouse.search_jobs()
+        saved_count = save_jobs(parsed_jobs, session)
+    finally:
+        session.close()
 
-        print(f"Greenhouse jobs found: {len(greenhouse_jobs)}")
-        jobs.extend(greenhouse_jobs)
+    logger.info("Parsed %d jobs and saved %d new records", len(parsed_jobs), saved_count)
 
-    except Exception as e:
-        print("Greenhouse scraper error:", e)
-
-    print("\nJobs collected:", len(jobs))
-
-    for job in jobs[:10]:
-        print(job)
+    for index, job in enumerate(parsed_jobs[:10], start=1):
+        company = job.company or "Unknown company"
+        print(f"{index}. {job.title} @ {company} ({job.url})")
 
 
 if __name__ == "__main__":

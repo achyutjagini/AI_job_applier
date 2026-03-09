@@ -39,6 +39,7 @@ class JobSchema(BaseModel):
     url: HttpUrl
     published: datetime | None = None
     source: str = Field(default=SOURCE_NAME)
+    skills: list[str] = Field(default_factory=list)
 
 
 def parse_jobs(raw_jobs: list[dict[str, Any]]) -> list[JobSchema]:

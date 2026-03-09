@@ -5,6 +5,7 @@ import logging
 from config.settings import DEFAULT_LIMIT, MAX_PAGES, SEARCH_LOCATIONS, TECH_JOB_QUERIES
 from database.db import get_session, init_db, save_jobs
 from models.job import parse_jobs
+from processors.job_processor import process_jobs
 from scrapers.arbetsformedlingen import ArbetsformedlingenScraper
 
 
@@ -30,18 +31,19 @@ def main() -> None:
 
     logger.info("Total jobs collected: %d", len(all_raw_jobs))
     parsed_jobs = parse_jobs(all_raw_jobs)
+    processed_jobs = process_jobs(parsed_jobs)
 
     session = get_session()
     try:
-        saved_count = save_jobs(parsed_jobs, session)
+        saved_count = save_jobs(processed_jobs, session)
     finally:
         session.close()
 
-    duplicates_skipped = len(parsed_jobs) - saved_count
+    duplicates_skipped = len(processed_jobs) - saved_count
     logger.info("Parsed %d jobs", len(parsed_jobs))
     logger.info("Saved %d new jobs (%d duplicates skipped)", saved_count, duplicates_skipped)
 
-    for index, job in enumerate(parsed_jobs[:10], start=1):
+    for index, job in enumerate(processed_jobs[:10], start=1):
         company = job.company or "Unknown company"
         print(f"{index}. {job.title} @ {company} ({job.url})")
 

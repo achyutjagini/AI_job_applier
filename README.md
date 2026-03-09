@@ -109,6 +109,12 @@ This will:
 3. Store found jobs in the database
 4. Print statistics
 
+### Run the tests:
+
+```bash
+pytest
+```
+
 ### Search for different job titles:
 
 To search for different keywords, edit `run_scraper.py` and modify the `run_linkedin_scraper()` call:

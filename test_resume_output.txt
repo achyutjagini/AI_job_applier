@@ -1,0 +1,123 @@
+Tailored Resume for Systemutvecklare Python at Svenska Kraftnät
+
+Professional Summary
+Targeting the Systemutvecklare Python role at Svenska Kraftnät with emphasis on python, kubernetes.
+
+Relevant Focus Areas
+- Role alignment: Systemutvecklare Python
+- Key skills to emphasize: python, kubernetes
+- Location: Not specified
+
+Job Description Highlights
+Svenska kraftnät är en nyckelaktör i energiomställningen. Vår IT-division växer för att möjliggöra en fördubblad elproduktion och en fossilfri framtid. Med den senaste tekniken ökar vi både infrastrukturens kapacitet och utvecklingstakten inom digitalisering och processer. Om tjänsten Vi söker en Pythonutvecklare som vill vara med och utveckla framtidens lösningar inom ett kritiskt verksamhetsområde med stor samhällsnytta. Hos oss får du möjlighet att bidra till ett område som expanderar snabbt och där digitalisering står i centrum. Tekniken är modern, samarbetet nära och möjligheterna till...
+
+Base Resume
+Achyut Jagini
+Stockholm, Sweden
+Email: [achyut.jagini@gmail.com](mailto:achyut.jagini@gmail.com)
+Phone: +46 769649537
+LinkedIn: https://www.linkedin.com/in/achyut-jagini/
+GitHub: https://github.com/achyutjagini
+
+SUMMARY
+Computer Science graduate with experience in machine learning, data analysis, and backend systems. Experienced in building ML models, data pipelines, and real-time data processing systems. Interested in AI engineering, machine learning systems, and data-driven software development.
+
+EDUCATION
+
+Stockholm University — Sweden
+Master’s in Computer and Systems Science
+Aug 2023 – Dec 2025
+
+Relevant Coursework:
+Data Mining, Machine Learning, Information Security, ERP, Data Science for Health Informatics
+
+PES University — Bangalore, India
+Bachelor of Technology in Computer Science (CGPA: 8.14)
+Aug 2019 – Jun 2023
+
+INDUSTRY EXPERIENCE
+
+Advanced Micro Devices (AMD) — Machine Learning Intern
+Jan 2023 – Jul 2023
+Designed and implemented a deep learning system for duplicate ticket detection using a Siamese Neural Network.
+Built models to identify high-parity JIRA defect tickets across large multi-project datasets.
+Achieved up to 81% accuracy with strong precision, recall, and F1-score.
+Applied data preprocessing, tokenization, feature engineering, and hyperparameter tuning.
+Integrated the model into an internal ticket triage workflow to reduce manual duplicate analysis.
+
+RESEARCH EXPERIENCE
+
+Master’s Thesis — Machine Learning for Customer Churn Prediction
+Jan 2025 – Jun 2025
+
+Developed machine learning models for predicting customer churn on the Telco Customer Churn dataset.
+Evaluated Logistic Regression, Random Forest, AdaBoost, Gradient Boosting, and CatBoost.
+Improved CatBoost performance to AUC 0.8653 and F1-score 0.8155.
+Used SHAP and LIME explainability to identify key churn drivers.
+
+Bachelor Thesis — Twitter Sentiment Analysis for Bitcoin Price Prediction
+Jun 2022 – Jun 2023
+
+Published in IEEE Xplore: https://ieeexplore.ieee.org/document/10127661
+
+Built a machine learning system to analyze Twitter sentiment and predict Bitcoin prices.
+Applied NLP techniques for sentiment classification.
+Combined sentiment scores with historical price data to improve prediction accuracy.
+
+PROJECTS
+
+Real-Time Crime Classification using Spark Streaming
+
+*Built a Spark Streaming pipeline in Python for large-scale crime data classification.
+Performed feature engineering on crime descriptions using Chi-Squared and K-Best selection.
+Trained Logistic Regression, Naïve Bayes, and Random Forest models.
+Conducted hyperparameter tuning and exploratory clustering analysis.
+IoT-Based Weather Data Monitoring System
+
+Developed an IoT system for real-time monitoring of temperature, humidity, and pressure.
+Built a Python GUI for live and historical data visualization.
+Implemented reliable sensor data transmission and logging.
+
+Kafka-Based Crime Data Analysis Platform
+
+Built a streaming data platform using Kafka, Spark, and Zookeeper.
+Implemented producers and consumers with JSON pipelines integrated with MongoDB.
+Conducted real-time aggregation and analysis of crime datasets.
+
+MERN Stack Dashboard Web Application
+
+Built an interactive dashboard for sales and order KPI visualization using MERN stack.
+
+SKILLS
+
+Programming & Data Analysis
+Python, SQL, Java, C, C++
+
+Machine Learning
+Scikit-learn, TensorFlow
+
+Data Visualization
+Tableau, Power BI, Matplotlib
+
+Web Development
+HTML, CSS, ReactJS, NodeJS, ExpressJS, Redux
+
+Databases
+MySQL, SQL Server, MongoDB, Pinecone
+
+Cloud & DevOps
+AWS, Google Cloud Platform (GCP), Docker, Kubernetes, Git, CI/CD
+
+LANGUAGES
+
+English — Proficient
+Swedish — Conversational
+French — Conversational
+Japanese — Conversational
+
+ADDITIONAL EXPERIENCE
+
+Volunteer — Systemvetardagen Career Fair
+
+Assisted with coordination of a major student IT & CS career fair.
+Facilitated interactions between students and technology companies.

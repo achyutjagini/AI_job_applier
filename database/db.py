@@ -24,6 +24,32 @@ def get_session() -> Session:
     return SessionLocal()
 
 
+def list_jobs(session: Session | None = None) -> list[JobSchema]:
+    """Load persisted jobs from the database as JobSchema objects."""
+
+    owns_session = session is None
+    db_session = session or get_session()
+
+    try:
+        rows = db_session.scalars(select(Job).order_by(Job.id.asc())).all()
+        return [
+            JobSchema(
+                id=row.id,
+                title=row.title,
+                company=row.company,
+                location=row.location,
+                description=row.description,
+                url=row.url,
+                published=row.published,
+                source=row.source,
+            )
+            for row in rows
+        ]
+    finally:
+        if owns_session:
+            db_session.close()
+
+
 def save_jobs(jobs: Iterable[JobSchema], session: Session | None = None) -> int:
     """Persist validated jobs while skipping duplicates by URL."""
 

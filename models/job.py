@@ -32,6 +32,7 @@ class Job(Base):
 
 
 class JobSchema(BaseModel):
+    id: int | None = None
     title: str
     company: str | None = None
     location: str | None = None
